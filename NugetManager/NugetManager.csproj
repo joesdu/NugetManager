@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Authors>joesdu</Authors>
+		<PackagePrefix>NugetManager</PackagePrefix>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/joesdu/NugetManager</RepositoryUrl>
+		<GenerateAssemblyConfigurationAttribute>True</GenerateAssemblyConfigurationAttribute>
+		<GenerateAssemblyCompanyAttribute>True</GenerateAssemblyCompanyAttribute>
+		<GenerateAssemblyProductAttribute>True</GenerateAssemblyProductAttribute>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<LangVersion>preview</LangVersion>
+		<!--<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>-->
+		<NoWarn>$(NoWarn);IDE0048;IDE1006;</NoWarn>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<!--控制生成产物目录-->
+		<!--<ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>-->
+	</PropertyGroup>
+	<ItemGroup>
+		<None Update="tools\nuget.exe">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<EmbeddedResource Include="tools\nuget.exe" />
+	</ItemGroup>
+
+</Project>
