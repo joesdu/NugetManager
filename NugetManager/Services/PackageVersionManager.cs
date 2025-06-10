@@ -22,14 +22,13 @@ public class PackageVersionManager(Action<string>? logAction = null)
         try
         {
             using var http = new HttpClient();
-            http.DefaultRequestHeaders.Add("User-Agent", "NugetManager/1.0");
+            http.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0");
             http.Timeout = TimeSpan.FromSeconds(30);
 
             // 根据查询源执行不同的查询策略
             await ExecuteQueryStrategy(http, packageName, result, querySource);
-
-            // 状态校准
-            await QueryWithStatusCalibration(http, packageName, result);
+            //// 状态校准
+            //await QueryWithStatusCalibration(http, packageName, result);
         }
         catch (Exception ex)
         {
@@ -39,11 +38,10 @@ public class PackageVersionManager(Action<string>? logAction = null)
 
         // 去重并排序
         var uniqueResults = result
-            .GroupBy(x => x.Version, StringComparer.OrdinalIgnoreCase)
-            .Select(g => g.First())
-            .OrderByDescending(x => x.Version, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
+                            .GroupBy(x => x.Version, StringComparer.OrdinalIgnoreCase)
+                            .Select(g => g.First())
+                            .OrderByDescending(x => x.Version, StringComparer.OrdinalIgnoreCase)
+                            .ToList();
         logAction?.Invoke($"✓ Found {uniqueResults.Count} versions total");
         return uniqueResults;
     }
@@ -73,29 +71,6 @@ public class PackageVersionManager(Action<string>? logAction = null)
             default:
                 await _apiService.UsePackageBaseAddressStrategy(http, packageName, result);
                 break;
-        }
-    }
-
-    /// <summary>
-    /// 查询状态校准 - 使用多种方法验证版本的Listed状态
-    /// </summary>
-    private async Task QueryWithStatusCalibration(HttpClient http, string packageName, List<(string Version, bool Listed)> result)
-    {
-        try
-        {
-            logAction?.Invoke("🔧 Starting status calibration...");
-
-            // 使用Registration API丰富状态信息
-            await _apiService.EnrichWithRegistrationApiStatus(http, packageName, result);
-
-            // 使用NuGet CLI进行状态校准
-            await _cliService.CalibrateVersionStatusWithNuGetCli(packageName, result);
-
-            logAction?.Invoke("✓ Status calibration completed");
-        }
-        catch (Exception ex)
-        {
-            logAction?.Invoke($"× Status calibration failed: {ex.Message}");
         }
     }
 }

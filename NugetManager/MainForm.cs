@@ -8,12 +8,12 @@ namespace NugetManager;
 /// <inheritdoc />
 public partial class MainForm : Form
 {
-    private CancellationTokenSource? cancellationTokenSource;
-    private LogForm? logForm;
+    private PackageOperationService? _operationService;
 
     // Services
     private PackageVersionManager? _versionManager;
-    private PackageOperationService? _operationService;
+    private CancellationTokenSource? cancellationTokenSource;
+    private LogForm? logForm;
 
     /// <inheritdoc />
     public MainForm()
@@ -68,9 +68,11 @@ public partial class MainForm : Form
         cmbQuerySource.Items.Add("Web Scraping (nuget.org)");
         cmbQuerySource.Items.Add("Comprehensive API Search (All Sources)");
         cmbQuerySource.SelectedIndex = 0; // 默认选择第一个
-    }    /// <summary>
-         /// 窗体关闭时，强制关闭日志窗体并清理临时文件
-         /// </summary>
+    }
+
+    /// <summary>
+    /// 窗体关闭时，强制关闭日志窗体并清理临时文件
+    /// </summary>
     private void Form1_FormClosing(object? sender, FormClosingEventArgs e)
     {
         // 取消所有操作
@@ -116,16 +118,17 @@ public partial class MainForm : Form
         {
             Debug.WriteLine($"CleanupTempNugetFiles failed: {ex.Message}");
         }
-    }    /// <summary>
-         /// 查询包所有版本及Listed状态（根据用户选择的查询源，包含状态校准）
-         /// </summary>
+    }
+
+    /// <summary>
+    /// 查询包所有版本及Listed状态（根据用户选择的查询源，包含状态校准）
+    /// </summary>
     private async Task<List<(string Version, bool Listed)>> QueryAllVersionsWithStatusAsync(string packageName)
     {
         if (_versionManager == null)
         {
             throw new InvalidOperationException("Version manager not initialized");
         }
-
         var querySource = cmbQuerySource.SelectedIndex;
         return await _versionManager.QueryAllVersionsWithStatusAsync(packageName, querySource);
     }
@@ -138,32 +141,30 @@ public partial class MainForm : Form
         {
             MessageBox.Show("Please enter a package name.", "Info");
             return;
-        }        // 显示loading状态 - 隐藏列表，显示loading提示
+        } // 显示loading状态 - 隐藏列表，显示loading提示
         dgvVersions.Visible = false;
         lblLoading.Visible = true;
         loadingSpinner.IsSpinning = true;
         btnQuery.Enabled = false;
-        btnQuery.Text = "Searching..."; lblLoading.Text = "Searching...";
+        btnQuery.Text = "Searching...";
 
         // 隐藏批量操作按钮
         btnDelete.Visible = false;
-        btnRelist.Visible = false;        // 确保日志窗口存在并显示查询过程
+        btnRelist.Visible = false; // 确保日志窗口存在并显示查询过程
         logForm ??= new(this);
         logForm.Show();
         logForm.AppendLog($"=== Querying package: {pkg} ===");
-        logForm.AppendLog("Trying multiple API strategies for complete version discovery..."); dgvVersions.Rows.Clear();
-
+        logForm.AppendLog("Trying multiple API strategies for complete version discovery...");
+        dgvVersions.Rows.Clear();
         logForm.AppendLog("Starting comprehensive version query...");
         var versions = await QueryAllVersionsWithStatusAsync(pkg);
         logForm.AppendLog($"Query completed, processing {versions.Count} unique versions...");
-
-        foreach (var v in versions) dgvVersions.Rows.Add(false, v.Version, v.Listed ? "Listed" : "Unlisted");// 隐藏loading状态，显示结果
+        foreach (var v in versions) dgvVersions.Rows.Add(false, v.Version, v.Listed ? "Listed" : "Unlisted"); // 隐藏loading状态，显示结果
         lblLoading.Visible = false;
-        lblLoading.Text = "Loading..."; // Reset text
         loadingSpinner.IsSpinning = false;
         btnQuery.Enabled = true;
         btnQuery.Text = "Search";
-        dgvVersions.Visible = true;// 记录查询结果
+        dgvVersions.Visible = true; // 记录查询结果
         var listedCount = versions.Count(v => v.Listed);
         var unlistedCount = versions.Count(v => !v.Listed);
         logForm.AppendLog($"=== Query completed: {versions.Count} versions found ===");
@@ -176,7 +177,6 @@ public partial class MainForm : Form
             var sample = versions.Take(5);
             foreach (var v in sample) logForm.AppendLog($"  {v.Version} - {(v.Listed ? "Listed" : "Unlisted")}");
         }
-
         switch (versions.Count)
         {
             case 0:
@@ -191,7 +191,6 @@ public partial class MainForm : Form
                 logForm.AppendLog($"✓ Successfully loaded {versions.Count} versions");
                 break;
         }
-
         UpdateButtonTexts();
     } // 替代包输入框失去焦点时，仅查询Listed版本（异步）
 
@@ -219,11 +218,10 @@ public partial class MainForm : Form
             MessageBox.Show("DataGridView columns not properly initialized.", "Error");
             return;
         }
-
         var selectedVersions = dgvVersions.Rows.Cast<DataGridViewRow>()
-            .Where(r => r.Cells["colSelect"].Value != null && Convert.ToBoolean(r.Cells["colSelect"].Value))
-            .Select(r => r.Cells["colVersion"].Value?.ToString())
-            .Where(v => !string.IsNullOrEmpty(v)).ToList();
+                                          .Where(r => r.Cells["colSelect"].Value != null && Convert.ToBoolean(r.Cells["colSelect"].Value))
+                                          .Select(r => r.Cells["colVersion"].Value?.ToString())
+                                          .Where(v => !string.IsNullOrEmpty(v)).ToList();
         if (string.IsNullOrEmpty(pkg) || string.IsNullOrEmpty(apiKey) || selectedVersions.Count == 0)
         {
             MessageBox.Show("Please enter package name, API Key and select versions to deprecate.", "Info");
@@ -245,7 +243,7 @@ public partial class MainForm : Form
 
         // 确保日志窗口存在并显示
         logForm ??= new(this);
-        logForm.Show();        // 重置进度
+        logForm.Show(); // 重置进度
         logForm.ResetProgress();
         logForm.SetStatus($"Starting deprecation of {selectedVersions.Count} versions...");
         logForm.AppendLog($"Starting batch deprecation for package: {pkg}");
@@ -262,7 +260,8 @@ public partial class MainForm : Form
         btnRelist.Enabled = false;
         btnQuery.Enabled = false;
         btnCancel.Visible = true;
-        btnCancel.Enabled = true; try
+        btnCancel.Enabled = true;
+        try
         {
             if (_operationService == null)
             {
@@ -270,17 +269,16 @@ public partial class MainForm : Form
             }
 
             // 创建进度回调，更新日志窗口的进度条和状态
-            Action<int, int> progressCallback = (current, total) =>
+            void ProgressCallback(int current, int total)
             {
-                if (logForm != null)
-                {
-                    logForm.SetProgress(current, total);
-                    logForm.SetStatus($"Processing {current}/{total} versions...");
-                }
-            };
+                if (logForm == null) return;
+                logForm.SetProgress(current, total);
+                logForm.SetStatus($"Processing {current}/{total} versions...");
+            }
 
             // 使用服务执行弃用操作
-            var success = await _operationService.DeprecatePackageVersionsAsync(pkg, apiKey, selectedVersions!, deprecationInfo, cancellationToken, progressCallback);            if (cancellationToken.IsCancellationRequested)
+            var success = await _operationService.DeprecatePackageVersionsAsync(pkg, apiKey, selectedVersions!, deprecationInfo, cancellationToken, ProgressCallback);
+            if (cancellationToken.IsCancellationRequested)
             {
                 logForm.SetStatus("Operation cancelled");
                 logForm.AppendLog("=== Batch deprecation cancelled ===");
@@ -343,11 +341,9 @@ public partial class MainForm : Form
             MessageBox.Show("DataGridView columns not properly initialized.", "Error");
             return;
         }
-
         var selectedRows = dgvVersions.Rows.Cast<DataGridViewRow>()
-            .Where(r => r.Cells["colSelect"].Value != null && Convert.ToBoolean(r.Cells["colSelect"].Value))
-            .ToList();
-
+                                      .Where(r => r.Cells["colSelect"].Value != null && Convert.ToBoolean(r.Cells["colSelect"].Value))
+                                      .ToList();
         if (string.IsNullOrEmpty(pkg) || string.IsNullOrEmpty(apiKey) || selectedRows.Count == 0)
         {
             MessageBox.Show("Please enter package name, API Key and select versions to unlist.", "Info");
@@ -356,17 +352,15 @@ public partial class MainForm : Form
 
         // 只处理Listed版本（可以unlist的）
         var listedVersions = selectedRows
-            .Where(r => r.Cells["colStatus"].Value?.ToString() == "Listed")
-            .Select(r => r.Cells["colVersion"].Value?.ToString())
-            .Where(v => !string.IsNullOrEmpty(v))
-            .ToList();
-
+                             .Where(r => r.Cells["colStatus"].Value?.ToString() == "Listed")
+                             .Select(r => r.Cells["colVersion"].Value?.ToString())
+                             .Where(v => !string.IsNullOrEmpty(v))
+                             .ToList();
         var unlistedVersions = selectedRows
-            .Where(r => r.Cells["colStatus"].Value?.ToString() == "Unlisted")
-            .Select(r => r.Cells["colVersion"].Value?.ToString())
-            .Where(v => !string.IsNullOrEmpty(v))
-            .ToList();
-
+                               .Where(r => r.Cells["colStatus"].Value?.ToString() == "Unlisted")
+                               .Select(r => r.Cells["colVersion"].Value?.ToString())
+                               .Where(v => !string.IsNullOrEmpty(v))
+                               .ToList();
         if (listedVersions.Count == 0)
         {
             MessageBox.Show(unlistedVersions.Count > 0 ? "All selected versions are already unlisted. Cannot unlist them again.\n\nTo re-list unlisted packages, you need to re-publish them using:\nnuget push <package-file> -ApiKey <your-api-key> -Source https://api.nuget.org/v3/index.json" : "No listed versions selected to unlist.", "Info");
@@ -387,7 +381,6 @@ public partial class MainForm : Form
         logForm.SetStatus("Starting batch unlist operation...");
         logForm.AppendLog($"Starting batch unlist for package: {pkg}");
         logForm.AppendLog($"Versions to unlist: {string.Join(", ", listedVersions)}");
-
         if (unlistedVersions.Count > 0)
         {
             logForm.AppendLog($"Already unlisted versions (skipped): {string.Join(", ", unlistedVersions)}");
@@ -398,7 +391,8 @@ public partial class MainForm : Form
         btnRelist.Enabled = false;
         btnQuery.Enabled = false;
         btnCancel.Visible = true;
-        btnCancel.Enabled = true; try
+        btnCancel.Enabled = true;
+        try
         {
             if (_operationService == null)
             {
@@ -406,19 +400,16 @@ public partial class MainForm : Form
             }
 
             // 创建进度回调，更新日志窗口的进度条和状态
-            Action<int, int> progressCallback = (current, total) =>
+            void ProgressCallback(int current, int total)
             {
-                if (logForm != null)
-                {
-                    logForm.SetProgress(current, total);
-                    logForm.SetStatus($"Unlisting {current}/{total} versions...");
-                }
-            };
+                if (logForm == null) return;
+                logForm.SetProgress(current, total);
+                logForm.SetStatus($"Unlisting {current}/{total} versions...");
+            }
 
             // 使用服务执行删除操作
-            var validVersions = listedVersions.Where(v => !string.IsNullOrEmpty(v)).Cast<string>().ToList();
-            var success = await _operationService.DeletePackageVersionsAsync(pkg, apiKey, validVersions, cancellationToken, progressCallback);
-
+            var validVersions = listedVersions.Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
+            var success = await _operationService.DeletePackageVersionsAsync(pkg, apiKey, validVersions, cancellationToken, ProgressCallback);
             logForm.AppendLog(success ? "✓ All versions unlisted successfully" : "⚠️ Some versions failed to unlist");
 
             // 提示无法处理的unlisted版本
@@ -433,7 +424,8 @@ public partial class MainForm : Form
                 logForm.AppendLog("   To re-list unlisted versions, you need to re-publish them using:");
                 logForm.AppendLog("   nuget push <package-file> -ApiKey <your-api-key> -Source https://api.nuget.org/v3/index.json");
                 logForm.AppendLog("   Note: You need the original .nupkg files for re-publishing");
-            }            if (cancellationToken.IsCancellationRequested)
+            }
+            if (cancellationToken.IsCancellationRequested)
             {
                 logForm.SetStatus("Operation cancelled");
                 logForm.AppendLog("=== Batch unlist cancelled ===");
@@ -470,19 +462,18 @@ public partial class MainForm : Form
             btnCancel.Visible = false;
             btnCancel.Enabled = false;
         }
-    }/// <summary>
-     /// 获取用户选择的Deprecation信息
-     /// </summary>
+    }
+
+    /// <summary>
+    /// 获取用户选择的Deprecation信息
+    /// </summary>
     private string? GetDeprecationInfo()
     {
         var reasons = new List<string>();
-
         if (chkCriticalBugs.Checked) reasons.Add("Critical bugs");
         if (chkLegacy.Checked) reasons.Add("Legacy");
         if (chkOther.Checked && !string.IsNullOrWhiteSpace(txtReason.Text)) reasons.Add($"Other: {txtReason.Text.Trim()}");
-
         if (reasons.Count == 0) return null;
-
         var info = $"Reasons: {string.Join(", ", reasons)}";
 
         // 添加替代包信息（如果提供）
@@ -491,7 +482,6 @@ public partial class MainForm : Form
         if (string.IsNullOrEmpty(altPackage)) return info;
         info += $"; Alternative package: {altPackage}";
         if (!string.IsNullOrEmpty(altVersion)) info += $" v{altVersion}";
-
         return info;
     }
 
@@ -502,9 +492,7 @@ public partial class MainForm : Form
     {
         var pkg = txtPackage.Text.Trim();
         if (string.IsNullOrEmpty(pkg)) return;
-
         logForm?.AppendLog("Refreshing version list...");
-
         dgvVersions.Rows.Clear();
         var versions = await QueryAllVersionsWithStatusAsync(pkg);
         foreach (var v in versions) dgvVersions.Rows.Add(false, v.Version, v.Listed ? "Listed" : "Unlisted");
@@ -532,7 +520,6 @@ public partial class MainForm : Form
         // 检查列是否存在
         if (dgvVersions.Columns["colSelect"] == null)
             return;
-
         var check = chkSelectAll.Checked;
         foreach (DataGridViewRow row in dgvVersions.Rows) row.Cells["colSelect"].Value = check;
         UpdateButtonTexts();
@@ -543,7 +530,6 @@ public partial class MainForm : Form
         // 检查列是否存在
         if (dgvVersions.Columns["colSelect"] == null || dgvVersions.Columns["colStatus"] == null)
             return;
-
         foreach (DataGridViewRow row in dgvVersions.Rows) row.Cells["colSelect"].Value = row.Cells["colStatus"].Value?.ToString() == "Listed";
         UpdateButtonTexts();
     }
@@ -554,7 +540,6 @@ public partial class MainForm : Form
         // 检查列是否存在
         if (dgvVersions.Columns["colSelect"] == null || dgvVersions.Columns["colStatus"] == null)
             return;
-
         foreach (DataGridViewRow row in dgvVersions.Rows) row.Cells["colSelect"].Value = row.Cells["colStatus"].Value?.ToString() == "Unlisted";
         UpdateButtonTexts();
     } // DataGridView选中行变化时，自动显示/隐藏批量操作按钮
@@ -563,12 +548,10 @@ public partial class MainForm : Form
     {
         var colSel = dgvVersions.Columns["colSelect"];
         if (colSel == null || e.ColumnIndex != colSel.Index) return;
-
         var anyChecked = dgvVersions.Rows.Cast<DataGridViewRow>()
-            .Any(r => r.Cells["colSelect"].Value != null && Convert.ToBoolean(r.Cells["colSelect"].Value));
+                                    .Any(r => r.Cells["colSelect"].Value != null && Convert.ToBoolean(r.Cells["colSelect"].Value));
         btnDelete.Visible = anyChecked;
         btnRelist.Visible = anyChecked;
-
         UpdateButtonTexts();
     }
 
@@ -597,16 +580,15 @@ public partial class MainForm : Form
             logForm?.AppendLog("× Error: colSelect column not found in DataGridView");
             return;
         }
-
         var selectedRows = dgvVersions.Rows.Cast<DataGridViewRow>()
-            .Where(r => r.Cells["colSelect"].Value != null && Convert.ToBoolean(r.Cells["colSelect"].Value))
-            .ToList(); if (selectedRows.Count == 0)
+                                      .Where(r => r.Cells["colSelect"].Value != null && Convert.ToBoolean(r.Cells["colSelect"].Value))
+                                      .ToList();
+        if (selectedRows.Count == 0)
         {
             btnDelete.Text = "Deprecate";
             btnRelist.Text = "Unlist Selected";
             return;
         }
-
         var listedCount = selectedRows.Count(r => r.Cells["colStatus"].Value?.ToString() == "Listed");
 
         // 更新Deprecate按钮文本
@@ -656,7 +638,6 @@ public partial class MainForm : Form
 
                                    ⚠️ Note: Some sources' status information may take time to sync from official servers!
                                    """;
-
         MessageBox.Show(helpMessage, "Query Source Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
@@ -676,7 +657,6 @@ public partial class MainForm : Form
             logForm?.Close();
             logForm?.Dispose();
         }
-
         base.Dispose(disposing);
     }
 }

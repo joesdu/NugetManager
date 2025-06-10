@@ -18,6 +18,11 @@ public partial class LogForm : Form
     }
 
     /// <summary>
+    /// Get current status text
+    /// </summary>
+    public string CurrentStatus => lblStatus.Text;
+
+    /// <summary>
     /// Initialize custom behavior after InitializeComponent
     /// </summary>
     private void InitializeCustomBehavior()
@@ -34,10 +39,7 @@ public partial class LogForm : Form
         parentForm.Move += OnParentFormMove;
         parentForm.Resize += OnParentFormResize;
         parentForm.FormClosed += OnParentFormClosed;
-    }    /// <summary>
-         /// Get current status text
-         /// </summary>
-    public string CurrentStatus => lblStatus.Text;
+    }
 
     /// <summary>
     /// AppendLog
@@ -50,7 +52,6 @@ public partial class LogForm : Form
             Invoke(new Action<string>(AppendLog), message);
             return;
         }
-
         var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
         var fullMessage = $"[{timestamp}] {message}";
 
@@ -88,7 +89,6 @@ public partial class LogForm : Form
             // 警告相关关键词 - 橙色
             (["⚠️", "⚠", "警告", "注意", "提醒", "Warning", "Caution", "Notice", "Alert", "Warn"], Color.Orange)
         };
-
         var processedMessage = ProcessMessageWithColors(message, patterns);
         txtLog.AppendText(processedMessage);
         txtLog.AppendText("\r\n");
@@ -102,11 +102,9 @@ public partial class LogForm : Form
     private string ProcessMessageWithColors(string message, List<(string[] keywords, Color color)> patterns)
     {
         var index = 0;
-
         while (index < message.Length)
         {
             var nextMatch = FindNextKeywordMatch(message, index, patterns);
-
             if (nextMatch.HasValue)
             {
                 var (matchIndex, keyword, color) = nextMatch.Value;
@@ -120,7 +118,6 @@ public partial class LogForm : Form
 
                 // 添加彩色关键词
                 AppendTextWithColor(keyword, color);
-
                 index = matchIndex + keyword.Length;
             }
             else
@@ -131,14 +128,12 @@ public partial class LogForm : Form
                 break;
             }
         }
-
         return ""; // 已经直接输出到RichTextBox，返回空字符串
     }
 
     private void AppendTextWithColor(string text, Color color)
     {
         if (string.IsNullOrEmpty(text)) return;
-
         txtLog.SelectionColor = color;
         txtLog.AppendText(text);
         txtLog.SelectionColor = txtLog.ForeColor; // 恢复默认颜色
@@ -148,18 +143,16 @@ public partial class LogForm : Form
     {
         var bestMatch = (index: -1, keyword: "", color: Color.Black);
         var earliestIndex = int.MaxValue;
-
         foreach (var (keywords, color) in patterns)
-            foreach (var keyword in keywords)
-            {
-                var index = message.IndexOf(keyword, startIndex, StringComparison.OrdinalIgnoreCase);
-                if (index < 0 || index >= earliestIndex) continue;
-                // 检查是否是完整的单词（对于英文关键词）
-                if (!IsValidKeywordMatch(message, index, keyword)) continue;
-                earliestIndex = index;
-                bestMatch = (index, keyword, color);
-            }
-
+        foreach (var keyword in keywords)
+        {
+            var index = message.IndexOf(keyword, startIndex, StringComparison.OrdinalIgnoreCase);
+            if (index < 0 || index >= earliestIndex) continue;
+            // 检查是否是完整的单词（对于英文关键词）
+            if (!IsValidKeywordMatch(message, index, keyword)) continue;
+            earliestIndex = index;
+            bestMatch = (index, keyword, color);
+        }
         return earliestIndex == int.MaxValue ? null : bestMatch;
     }
 
@@ -195,14 +188,12 @@ public partial class LogForm : Form
             // 获取滚动条信息
             const int SB_VERT = 1;
             const int SIF_ALL = 0x17;
-
             var si = new SCROLLINFO
             {
                 cbSize = Marshal.SizeOf<SCROLLINFO>(),
                 fMask = SIF_ALL
             };
-
-            if (GetScrollInfo(txtLog.Handle, SB_VERT, ref si)) return (si.nPos, si.nMax - (int)si.nPage + 1);
+            if (GetScrollInfo(txtLog.Handle, SB_VERT, ref si)) return (si.nPos, (si.nMax - (int)si.nPage) + 1);
         }
         catch
         {
@@ -290,7 +281,6 @@ public partial class LogForm : Form
             Invoke(new Action<string>(SetStatus), status);
             return;
         }
-
         lblStatus.Text = status;
     }
 
@@ -306,7 +296,6 @@ public partial class LogForm : Form
             Invoke(new Action<int, int>(SetProgress), value, maximum);
             return;
         }
-
         progressBar.Maximum = maximum;
         progressBar.Value = Math.Min(value, maximum);
     }
@@ -321,25 +310,22 @@ public partial class LogForm : Form
             Invoke(ResetProgress);
             return;
         }
-
         progressBar.Value = 0;
     }
 
     private void PositionToRightOfParent()
     {
-        if (parentForm == null) return; // 计算位置：主窗体右边缘 + 2像素间距
-        var x = parentForm.Location.X + parentForm.Width + 2;
+        if (parentForm == null) return; // 计算位置：主窗体右边缘
+        var x = parentForm.Location.X + parentForm.Width;
         var y = parentForm.Location.Y;
 
         // 确保窗口不会超出屏幕边界
         var screen = Screen.FromControl(parentForm);
         var maxX = screen.WorkingArea.Right - Width;
         var maxY = screen.WorkingArea.Bottom - Height;
-
         x = Math.Min(x, maxX);
         y = Math.Min(y, maxY);
         y = Math.Max(y, screen.WorkingArea.Top);
-
         Location = new(x, y);
 
         // 设置高度与主窗体相同
@@ -417,7 +403,6 @@ public partial class LogForm : Form
             // 方法2：使用RichTextBox的位置信息
             var lastCharIndex = txtLog.Text.Length - 1;
             if (lastCharIndex < 0) return true;
-
             var lastCharPos = txtLog.GetPositionFromCharIndex(lastCharIndex);
             var visibleRect = txtLog.ClientRectangle;
 

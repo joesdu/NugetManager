@@ -353,7 +353,6 @@ partial class MainForm
         lblLoading.Name = "lblLoading";
         lblLoading.Size = new Size(353, 21);
         lblLoading.TabIndex = 14;
-        lblLoading.Text = "Searching...";
         lblLoading.Visible = false;//        // loadingSpinner
         // 
         loadingSpinner.Location = new Point(264, 200); // Center of the grid: 20+520/2-16, 120+200/2-16
