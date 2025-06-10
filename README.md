@@ -1,13 +1,13 @@
 # NuGet Package Manager
 
-A comprehensive .NET 10 WinForms application for batch management of NuGet packages, including querying, deprecating, and listing/unlisting operations.
+A comprehensive .NET 10 WinForms application for batch management of NuGet packages, including querying, deprecating, and unlisting operations.
 
 ## Features
 
 ### 🔍 Package Version Query
 - **Complete Version Discovery**: Uses enhanced NuGet.org API with intelligent fallback mechanisms
 - **Registration API + Search API**: Ensures all package versions are discovered, including both listed and unlisted
-- **Listed/Unlisted Status**: Clear visual indication of package status in DataGridView
+- **Unlisted Status**: Clear visual indication of package status in DataGridView
 - **Smart Pagination**: Handles API pagination automatically to fetch all versions
 
 ### 📋 Version Selection
@@ -28,10 +28,9 @@ A comprehensive .NET 10 WinForms application for batch management of NuGet packa
 - **Alternative Package Suggestion**: Option to specify replacement package and version
 - **Detailed Logging**: All deprecation actions and reasons are logged
 
-### 📝 Smart List/Unlist Operations
+### 📝 Smart Unlist Operations
 - **Intelligent Operation**: 
   - Listed versions → Unlisted (using `nuget delete`)
-  - Unlisted versions → Shows re-list instructions (re-publishing required)
 - **Batch Processing**: Process multiple versions efficiently
 - **Clear Status Feedback**: Real-time progress and detailed operation logs
 
