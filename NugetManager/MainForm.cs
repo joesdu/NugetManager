@@ -63,9 +63,7 @@ public partial class MainForm : Form
     {
         cmbQuerySource.Items.Clear();
         cmbQuerySource.Items.Add("Package Base Address API (Recommended)");
-        cmbQuerySource.Items.Add("Enhanced V3 Registration API");
         cmbQuerySource.Items.Add("Web Scraping (nuget.org)");
-        cmbQuerySource.Items.Add("Comprehensive API Search (All Sources)");
         cmbQuerySource.SelectedIndex = 0; // 默认选择第一个
     }
 

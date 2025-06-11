@@ -10,8 +10,8 @@ namespace NugetManager.Services;
 public sealed class PackageVersionManager(Action<string>? logAction = null)
 {
     private readonly NugetApiService _apiService = new(logAction);
-    private readonly WebScrapingService _webScrapingService = new(logAction);
-
+    private readonly WebScrapingService _webScrapingService = new(logAction); 
+    
     /// <summary>
     /// 查询包的所有版本及其Listed状态
     /// </summary>
@@ -20,14 +20,8 @@ public sealed class PackageVersionManager(Action<string>? logAction = null)
         var result = new List<(string Version, bool Listed)>();
         try
         {
-            using var http = new HttpClient();
-            http.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0");
-            http.Timeout = TimeSpan.FromSeconds(30);
-
             // 根据查询源执行不同的查询策略
-            await ExecuteQueryStrategy(http, packageName, result, querySource);
-            //// 状态校准
-            //await QueryWithStatusCalibration(http, packageName, result);
+            result = await ExecuteQueryStrategy(packageName, querySource);
         }
         catch (Exception ex)
         {
@@ -35,38 +29,29 @@ public sealed class PackageVersionManager(Action<string>? logAction = null)
             throw new InvalidOperationException($"Failed to query package versions: {ex.Message}", ex);
         }
 
-        // 去重并排序
-        var uniqueResults = result
-                            .GroupBy(x => x.Version, StringComparer.OrdinalIgnoreCase)
-                            .Select(g => g.First())
-                            .OrderByDescending(x => x.Version, StringComparer.OrdinalIgnoreCase)
-                            .ToList();
-        logAction?.Invoke($"✓ Found {uniqueResults.Count} versions total");
-        return uniqueResults;
+        logAction?.Invoke($"✓ Found {result.Count} versions total");
+        return result;
     }
 
     /// <summary>
     /// 根据查询源选择执行不同的查询策略
     /// </summary>
-    private async Task ExecuteQueryStrategy(HttpClient http, string packageName, List<(string Version, bool Listed)> result, int querySource)
+    private async Task<List<(string Version, bool Listed)>> ExecuteQueryStrategy(string packageName, int querySource)
     {
         switch (querySource)
         {
-            case 0: // Package Base Address API (Recommended)
-                await _apiService.UsePackageBaseAddressStrategy(http, packageName, result);
-                break;
-            case 1: // Enhanced V3 Registration API
-                await _apiService.UseV3RegistrationStrategy(http, packageName, result);
-                break;
-            case 2: // Web Scraping (nuget.org)
-                await _webScrapingService.UseWebScrapingStrategy(http, packageName, result);
-                break;
-            case 3: // Comprehensive API Search (All Sources)
-                await _apiService.UseComprehensiveApiSearch(http, packageName, result);
-                break;
+            case 0: // 新的增强型注册API（推荐，基于PowerShell脚本优化）
+                return await _apiService.GetPackageVersionsAsync(packageName);
+            case 1: // Web爬虫方式（回退选项）
+                using var http = new HttpClient();
+                http.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+                http.Timeout = TimeSpan.FromSeconds(30);
+                var webResult = new List<(string Version, bool Listed)>();
+                await _webScrapingService.UseWebScrapingStrategy(http, packageName, webResult);
+                return webResult;
             default:
-                await _apiService.UsePackageBaseAddressStrategy(http, packageName, result);
-                break;
+                // 默认使用增强型注册API
+                return await _apiService.GetPackageVersionsAsync(packageName);
         }
     }
 }
