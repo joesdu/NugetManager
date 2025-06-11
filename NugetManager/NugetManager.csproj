@@ -13,6 +13,7 @@
 		<PackagePrefix>NugetManager</PackagePrefix>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/joesdu/NugetManager</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/joesdu/NugetManager</PackageProjectUrl>
 		<GenerateAssemblyConfigurationAttribute>True</GenerateAssemblyConfigurationAttribute>
 		<GenerateAssemblyCompanyAttribute>True</GenerateAssemblyCompanyAttribute>
 		<GenerateAssemblyProductAttribute>True</GenerateAssemblyProductAttribute>
@@ -23,6 +24,15 @@
 	<ItemGroup>
 		<None Include="..\README.md" Pack="true" PackagePath="" />
 	</ItemGroup>
+
+	<PropertyGroup>
+		<TrimMode>link</TrimMode>
+		<RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+		<SelfContained>true</SelfContained>
+		<PublishReadyToRun>true</PublishReadyToRun>
+		<Copyright>©joesdu. All rights reserved.</Copyright>
+		<NeutralLanguage>zh-CN</NeutralLanguage>
+	</PropertyGroup>
 
 	<PropertyGroup>
 		<LangVersion>preview</LangVersion>
