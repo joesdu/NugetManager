@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace NugetManager.Services;
 
 /// <summary>
@@ -61,7 +63,7 @@ public sealed class NugetApiService(Action<string>? logAction = null)
     public async Task<List<(string Version, bool Listed)>> GetPackageVersionsAsync(string packageName, string source = DefaultSource)
     {
         var result = new List<(string Version, bool Listed)>();
-        
+
         try
         {
             logAction?.Invoke($"📦 Getting version information for package {packageName}...");
@@ -175,9 +177,9 @@ public sealed class NugetApiService(Action<string>? logAction = null)
     private async Task ProcessRegistrationPage(HttpClient http, string pageUrl, List<(string Version, bool Listed)> result, HashSet<string> visitedUrls)
     {
         if (visitedUrls.Contains(pageUrl)) return;
-        
+
         visitedUrls.Add(pageUrl);
-        
+
         try
         {
             logAction?.Invoke($"   Processing page: {pageUrl}");
@@ -215,7 +217,7 @@ public sealed class NugetApiService(Action<string>? logAction = null)
     private void ProcessCatalogEntry(JsonElement catalogEntry, List<(string Version, bool Listed)> result)
     {
         if (!catalogEntry.TryGetProperty("version", out var versionElement)) return;
-        
+
         var version = versionElement.GetString();
         if (string.IsNullOrEmpty(version)) return;
 

@@ -10,8 +10,8 @@ namespace NugetManager.Services;
 public sealed class PackageVersionManager(Action<string>? logAction = null)
 {
     private readonly NugetApiService _apiService = new(logAction);
-    private readonly WebScrapingService _webScrapingService = new(logAction); 
-    
+    private readonly WebScrapingService _webScrapingService = new(logAction);
+
     /// <summary>
     /// 查询包的所有版本及其Listed状态
     /// </summary>
@@ -43,12 +43,14 @@ public sealed class PackageVersionManager(Action<string>? logAction = null)
             case 0: // 新的增强型注册API（推荐，基于PowerShell脚本优化）
                 return await _apiService.GetPackageVersionsAsync(packageName);
             case 1: // Web爬虫方式（回退选项）
-                using var http = new HttpClient();
-                http.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-                http.Timeout = TimeSpan.FromSeconds(30);
-                var webResult = new List<(string Version, bool Listed)>();
-                await _webScrapingService.UseWebScrapingStrategy(http, packageName, webResult);
-                return webResult;
+                {
+                    using var http = new HttpClient();
+                    http.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+                    http.Timeout = TimeSpan.FromSeconds(30);
+                    var webResult = new List<(string Version, bool Listed)>();
+                    await _webScrapingService.UseWebScrapingStrategy(http, packageName, webResult);
+                    return webResult;
+                }
             default:
                 // 默认使用增强型注册API
                 return await _apiService.GetPackageVersionsAsync(packageName);
