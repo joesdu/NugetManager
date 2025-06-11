@@ -43,14 +43,14 @@ partial class MainForm
         lblAltVersion = new Label();
         cmbAltVersion = new ComboBox();
         lblPackage = new Label();
-        btnSelectListed = new Button();
-        btnSelectUnlisted = new Button();
         lblDeprecation = new Label();
-        lblListingDescription = new Label(); lblLoading = new Label();
+        lblListingDescription = new Label();
+        lblLoading = new Label();
         loadingSpinner = new LoadingSpinner();
         cmbQuerySource = new ComboBox();
         lblQuerySource = new Label();
         lblQuerySourceHelp = new Label();
+        linkGithub = new LinkLabel();
         ((System.ComponentModel.ISupportInitialize)dgvVersions).BeginInit();
         grpReason.SuspendLayout();
         SuspendLayout();
@@ -304,26 +304,6 @@ partial class MainForm
         lblPackage.TabIndex = 0;
         lblPackage.Text = "Package name:";
         // 
-        // btnSelectListed
-        // 
-        btnSelectListed.Location = new Point(130, 328);
-        btnSelectListed.Name = "btnSelectListed";
-        btnSelectListed.Size = new Size(100, 25);
-        btnSelectListed.TabIndex = 4;
-        btnSelectListed.Text = "Select Listed";
-        btnSelectListed.UseVisualStyleBackColor = true;
-        btnSelectListed.Click += btnSelectListed_Click;
-        // 
-        // btnSelectUnlisted
-        // 
-        btnSelectUnlisted.Location = new Point(240, 328);
-        btnSelectUnlisted.Name = "btnSelectUnlisted";
-        btnSelectUnlisted.Size = new Size(110, 25);
-        btnSelectUnlisted.TabIndex = 5;
-        btnSelectUnlisted.Text = "Select Unlisted";
-        btnSelectUnlisted.UseVisualStyleBackColor = true;
-        btnSelectUnlisted.Click += btnSelectUnlisted_Click;
-        // 
         // lblDeprecation
         // 
         lblDeprecation.AutoSize = true;
@@ -344,24 +324,25 @@ partial class MainForm
         lblListingDescription.Size = new Size(520, 60);
         lblListingDescription.TabIndex = 11;
         lblListingDescription.Text = "You can control how your packages are listed using the checkbox below. As per policy, permanent deletion is not supported as it would break every project depending on the availability of the package.";
-        //        // lblLoading
+        // 
+        // lblLoading
         // 
         lblLoading.AutoSize = true;
         lblLoading.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
         lblLoading.ForeColor = Color.FromArgb(0, 122, 204);
-        lblLoading.Location = new Point(180, 240); // Below the spinner, centered
+        lblLoading.Location = new Point(180, 240);
         lblLoading.Name = "lblLoading";
-        lblLoading.Size = new Size(353, 21);
+        lblLoading.Size = new Size(0, 21);
         lblLoading.TabIndex = 14;
-        lblLoading.Visible = false;//        // loadingSpinner
+        lblLoading.Visible = false;
         // 
-        loadingSpinner.Location = new Point(264, 200); // Center of the grid: 20+520/2-16, 120+200/2-16
+        // loadingSpinner
+        // 
+        loadingSpinner.BackColor = Color.Transparent;
+        loadingSpinner.Location = new Point(264, 200);
         loadingSpinner.Name = "loadingSpinner";
         loadingSpinner.Size = new Size(32, 32);
         loadingSpinner.TabIndex = 15;
-        loadingSpinner.SpinnerColor = Color.FromArgb(0, 120, 212);
-        loadingSpinner.Thickness = 3;
-        loadingSpinner.IsSpinning = false;
         // 
         // cmbQuerySource
         // 
@@ -396,11 +377,26 @@ partial class MainForm
         lblQuerySourceHelp.Text = "🤔";
         lblQuerySourceHelp.Click += lblQuerySourceHelp_Click;
         // 
+        // linkGithub
+        // 
+        linkGithub.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+        linkGithub.AutoSize = true;
+        linkGithub.LinkColor = Color.RoyalBlue;
+        linkGithub.Location = new Point(507, 814);
+        linkGithub.Name = "linkGithub";
+        linkGithub.Size = new Size(45, 15);
+        linkGithub.TabIndex = 99;
+        linkGithub.TabStop = true;
+        linkGithub.Text = "GitHub";
+        linkGithub.VisitedLinkColor = Color.Purple;
+        linkGithub.LinkClicked += linkGithub_LinkClicked;
+        // 
         // MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(564, 838);
+        Controls.Add(linkGithub);
         Controls.Add(lblPackage);
         Controls.Add(txtPackage);
         Controls.Add(lblQuerySource);
@@ -408,8 +404,6 @@ partial class MainForm
         Controls.Add(lblQuerySourceHelp);
         Controls.Add(btnQuery);
         Controls.Add(chkSelectAll);
-        Controls.Add(btnSelectListed);
-        Controls.Add(btnSelectUnlisted);
         Controls.Add(lblApiKey);
         Controls.Add(txtApiKey);
         Controls.Add(lblDeprecation);
@@ -453,8 +447,6 @@ partial class MainForm
     private Label lblAltVersion;
     private ComboBox cmbAltVersion;
     private Label lblPackage;
-    private Button btnSelectListed;
-    private Button btnSelectUnlisted;
     private Label lblDeprecation;
     private Label lblLoading;
     private LoadingSpinner loadingSpinner; private Label lblDeprecationDescription;
@@ -464,6 +456,7 @@ partial class MainForm
     private DataGridViewCheckBoxColumn colSelect;
     private DataGridViewTextBoxColumn colVersion;
     private DataGridViewTextBoxColumn colStatus;
+    private LinkLabel linkGithub;
 }
 
 #endregion

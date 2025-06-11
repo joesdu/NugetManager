@@ -5,7 +5,7 @@ namespace NugetManager.Services;
 /// <summary>
 /// 处理NuGet网页抓取相关的功能
 /// </summary>
-public partial class WebScrapingService(Action<string>? logAction = null)
+public sealed partial class WebScrapingService(Action<string>? logAction = null)
 {
     // Generated Regex methods for better performance
     [GeneratedRegex("<tr[^>]*>.*?</tr>", RegexOptions.IgnoreCase | RegexOptions.Singleline)]
@@ -23,24 +23,23 @@ public partial class WebScrapingService(Action<string>? logAction = null)
     /// <summary>
     /// 使用网页抓取策略查询版本
     /// </summary>
-    public async Task<bool> UseWebScrapingStrategy(HttpClient http, string packageName, List<(string Version, bool Listed)> result)
+    public async Task UseWebScrapingStrategy(HttpClient http, string packageName, List<(string Version, bool Listed)> result)
     {
         try
         {
             logAction?.Invoke("🌐 Trying Web Scraping Strategy...");
-            return await TryWebScrapingFromNugetOrg(http, packageName, result);
+            await TryWebScrapingFromNugetOrg(http, packageName, result);
         }
         catch (Exception ex)
         {
             logAction?.Invoke($"   × Web Scraping Strategy failed: {ex.Message}");
-            return false;
         }
     }
 
     /// <summary>
     /// 尝试从nuget.org抓取版本信息
     /// </summary>
-    private async Task<bool> TryWebScrapingFromNugetOrg(HttpClient http, string packageName, List<(string Version, bool Listed)> result)
+    private async Task TryWebScrapingFromNugetOrg(HttpClient http, string packageName, List<(string Version, bool Listed)> result)
     {
         try
         {
@@ -67,7 +66,6 @@ public partial class WebScrapingService(Action<string>? logAction = null)
                     result.Add((version, true)); // #versions-tab 只展示 listed 版本
                     logAction?.Invoke($"   Found: {version} (Listed: True)");
                 }
-                return result.Count > 0;
             }
 
             // 兼容旧版表格（极少数情况）
@@ -89,14 +87,11 @@ public partial class WebScrapingService(Action<string>? logAction = null)
                     result.Add((version, listed));
                     logAction?.Invoke($"   Found: {version} (Listed: {listed})");
                 }
-                return result.Count > 0;
             }
-            return false;
         }
         catch (Exception ex)
         {
             logAction?.Invoke($"   × nuget.org web scraping failed: {ex.Message}");
-            return false;
         }
     }
 }

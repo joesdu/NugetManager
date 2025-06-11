@@ -5,7 +5,7 @@ namespace NugetManager.Services;
 /// <summary>
 /// 处理NuGet API相关的查询功能
 /// </summary>
-public class NugetApiService(Action<string>? logAction = null)
+public sealed class NugetApiService(Action<string>? logAction = null)
 {
 
     /// <summary>

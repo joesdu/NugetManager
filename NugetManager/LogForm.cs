@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace NugetManager;
 
@@ -39,6 +41,13 @@ public partial class LogForm : Form
         parentForm.Move += OnParentFormMove;
         parentForm.Resize += OnParentFormResize;
         parentForm.FormClosed += OnParentFormClosed;
+
+        // 注册鼠标事件
+        txtLog.MouseDown += TxtLog_MouseDown;
+        txtLog.MouseMove += TxtLog_MouseMove;
+        txtLog.MouseLeave += TxtLog_MouseLeave;
+        txtLog.ReadOnly = true; // 防止用户编辑
+        txtLog.DetectUrls = false; // 禁用默认URL检测，使用自定义高亮
     }
 
     /// <summary>
@@ -67,6 +76,13 @@ public partial class LogForm : Form
         txtLog.ScrollToCaret();
     }
 
+    // 正则表达式用于检测URL
+    [GeneratedRegex(@"https?://[^\s]+", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+    private static partial Regex UrlRegex();
+
+    // 当前鼠标悬停的URL范围
+    private (int start, int length)? hoveredUrlRange;
+
     private void AppendColoredText(string message)
     {
         // 保存当前选择
@@ -77,16 +93,35 @@ public partial class LogForm : Form
         txtLog.SelectionStart = txtLog.Text.Length;
         txtLog.SelectionLength = 0;
 
-        // 定义关键词和对应颜色
+        // 先高亮URL
+        foreach (Match match in UrlRegex().Matches(message))
+        {
+            // 先添加前面的普通文本
+            if (match.Index > 0)
+            {
+                var before = message[..match.Index];
+                AppendTextWithColor(before, txtLog.ForeColor);
+            }
+            // 添加URL文本（蓝色并带下划线）
+            txtLog.SelectionColor = Color.RoyalBlue;
+            txtLog.SelectionFont = new(txtLog.Font, FontStyle.Underline);
+            txtLog.AppendText(match.Value);
+            txtLog.SelectionFont = txtLog.Font;
+            txtLog.SelectionColor = txtLog.ForeColor;
+            txtLog.AppendText("\r\n");
+
+            // 处理剩余文本
+            message = message[(match.Index + match.Length)..];
+            // 只处理第一个匹配，递归处理剩余文本
+            if (message.Length > 0) AppendColoredText(message);
+            return;
+        }
+
+        // 如果没有URL，按原有逻辑高亮关键词
         var patterns = new List<(string[] keywords, Color color)>
         {
-            // 成功相关关键词 - 绿色
             (["✓", "成功", "完成", "Success", "Completed", "OK", "Done"], Color.LimeGreen),
-
-            // 失败相关关键词 - 红色  
             (["×", "✗", "失败", "错误", "异常", "Error", "Failed", "Exception", "Fail"], Color.Red),
-
-            // 警告相关关键词 - 橙色
             (["⚠️", "⚠", "警告", "注意", "提醒", "Warning", "Caution", "Notice", "Alert", "Warn"], Color.Orange)
         };
         var processedMessage = ProcessMessageWithColors(message, patterns);
@@ -97,6 +132,89 @@ public partial class LogForm : Form
         if (autoScroll || currentSelection >= txtLog.Text.Length) return;
         txtLog.SelectionStart = currentSelection;
         txtLog.SelectionLength = Math.Min(currentLength, txtLog.Text.Length - currentSelection);
+    }
+
+    private void TxtLog_MouseMove(object? sender, MouseEventArgs e)
+    {
+        // 仅在按住Ctrl时才检测和高亮URL
+        if (!ModifierKeys.HasFlag(Keys.Control))
+        {
+            ResetUrlHighlight();
+            return;
+        }
+
+        var charIndex = txtLog.GetCharIndexFromPosition(e.Location);
+        if (charIndex < 0 || charIndex >= txtLog.Text.Length)
+        {
+            ResetUrlHighlight();
+            return;
+        }
+
+        // 查找鼠标下的URL
+        foreach (Match match in UrlRegex().Matches(txtLog.Text))
+        {
+            if (charIndex < match.Index || charIndex >= match.Index + match.Length) continue;
+            if (hoveredUrlRange != null && hoveredUrlRange.Value.start == match.Index) return;
+            HighlightUrl(match.Index, match.Length);
+            txtLog.Cursor = Cursors.Hand;
+            return;
+        }
+        ResetUrlHighlight();
+    }
+
+    private void TxtLog_MouseLeave(object? sender, EventArgs e)
+    {
+        ResetUrlHighlight();
+    }
+
+    private void HighlightUrl(int start, int length)
+    {
+        // 取消之前的高亮
+        if (hoveredUrlRange != null)
+        {
+            txtLog.SelectionStart = hoveredUrlRange.Value.start;
+            txtLog.SelectionLength = hoveredUrlRange.Value.length;
+            txtLog.SelectionBackColor = txtLog.BackColor;
+        }
+        // 设置新高亮
+        txtLog.SelectionStart = start;
+        txtLog.SelectionLength = length;
+        txtLog.SelectionBackColor = Color.LightSkyBlue;
+        hoveredUrlRange = (start, length);
+    }
+
+    private void ResetUrlHighlight()
+    {
+        if (hoveredUrlRange != null)
+        {
+            txtLog.SelectionStart = hoveredUrlRange.Value.start;
+            txtLog.SelectionLength = hoveredUrlRange.Value.length;
+            txtLog.SelectionBackColor = txtLog.BackColor;
+            hoveredUrlRange = null;
+        }
+        txtLog.Cursor = Cursors.IBeam;
+    }
+
+    private void TxtLog_MouseDown(object? sender, MouseEventArgs e)
+    {
+        // 只有在按住Ctrl键时才允许点击打开链接
+        if (e.Button != MouseButtons.Left || !ModifierKeys.HasFlag(Keys.Control)) return;
+        var charIndex = txtLog.GetCharIndexFromPosition(e.Location);
+        if (charIndex < 0 || charIndex >= txtLog.Text.Length) return;
+
+        foreach (Match match in UrlRegex().Matches(txtLog.Text))
+        {
+            if (charIndex < match.Index || charIndex >= match.Index + match.Length) continue;
+            try
+            {
+                Process.Start(new ProcessStartInfo(match.Value) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"无法打开链接: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            break;
+        }
     }
 
     private string ProcessMessageWithColors(string message, List<(string[] keywords, Color color)> patterns)

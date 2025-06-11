@@ -6,7 +6,7 @@ namespace NugetManager.Services;
 /// <summary>
 /// 处理NuGet CLI相关的功能
 /// </summary>
-public class NugetCliService(Action<string>? logAction = null)
+public static class NugetCliHelper
 {
     // Static field to cache the nuget.exe path for reuse
     private static string? _cachedNugetExePath;
@@ -103,70 +103,6 @@ public class NugetCliService(Action<string>? logAction = null)
                 // Ignore
             }
             return null;
-        }
-    }
-
-    /// <summary>
-    /// 使用NuGet CLI策略查询版本
-    /// </summary>
-    public async Task UseNuGetCliStrategy(string packageName, List<(string Version, bool Listed)> result)
-    {
-        logAction?.Invoke("🛠️ Trying NuGet CLI Tool...");
-        await TryNugetExeListCommand(packageName, result);
-        logAction?.Invoke($"   ✓ Found {result.Count} versions via NuGet CLI");
-    }
-
-    /// <summary>
-    /// 使用nuget.exe list命令查询版本
-    /// </summary>
-    private async Task TryNugetExeListCommand(string packageName, List<(string Version, bool Listed)> result)
-    {
-        try
-        {
-            var nugetExe = FindNugetExe();
-            if (string.IsNullOrEmpty(nugetExe))
-            {
-                logAction?.Invoke("   × NuGet CLI not found");
-                return;
-            }
-            await Task.Run(() =>
-            {
-                try
-                {
-                    var psi = new ProcessStartInfo(nugetExe, $"list {packageName} -AllVersions -PreRelease")
-                    {
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-                    using var process = Process.Start(psi);
-                    if (process == null) return;
-                    var output = process.StandardOutput.ReadToEnd();
-                    var error = process.StandardError.ReadToEnd();
-                    process.WaitForExit();
-                    if (process.ExitCode != 0)
-                    {
-                        logAction?.Invoke($"   × NuGet CLI failed: {error}");
-                        return;
-                    }
-                    result.AddRange(from line in output.Split('\n')
-                                    select line.Trim() into trimmed
-                                    where !string.IsNullOrEmpty(trimmed) && trimmed.StartsWith(packageName, StringComparison.OrdinalIgnoreCase)
-                                    select trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries) into parts
-                                    where parts.Length >= 2
-                                    select parts[1] into version
-                                    select (version, true));
-                }
-                catch (Exception ex)
-                {
-                    logAction?.Invoke($"   × NuGet CLI error: {ex.Message}");
-                }
-            });
-        }
-        catch (Exception ex)
-        {
-            logAction?.Invoke($"   × NuGet CLI failed: {ex.Message}");
         }
     }
 }

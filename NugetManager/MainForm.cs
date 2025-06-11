@@ -64,7 +64,6 @@ public partial class MainForm : Form
         cmbQuerySource.Items.Clear();
         cmbQuerySource.Items.Add("Package Base Address API (Recommended)");
         cmbQuerySource.Items.Add("Enhanced V3 Registration API");
-        cmbQuerySource.Items.Add("NuGet CLI Tool");
         cmbQuerySource.Items.Add("Web Scraping (nuget.org)");
         cmbQuerySource.Items.Add("Comprehensive API Search (All Sources)");
         cmbQuerySource.SelectedIndex = 0; // 默认选择第一个
@@ -97,22 +96,18 @@ public partial class MainForm : Form
         try
         {
             var tempPath = Path.Combine(Path.GetTempPath(), "NugetManager");
-            if (Directory.Exists(tempPath))
+            if (!Directory.Exists(tempPath)) return;
+            var nugetExePath = Path.Combine(tempPath, "nuget.exe");
+            if (File.Exists(nugetExePath))
             {
-                var nugetExePath = Path.Combine(tempPath, "nuget.exe");
-                if (File.Exists(nugetExePath))
-                {
-                    File.Delete(nugetExePath);
-                    Debug.WriteLine($"Cleaned up temp nuget.exe: {nugetExePath}");
-                }
-
-                // 如果目录为空，删除目录
-                if (!Directory.EnumerateFileSystemEntries(tempPath).Any())
-                {
-                    Directory.Delete(tempPath);
-                    Debug.WriteLine($"Cleaned up temp directory: {tempPath}");
-                }
+                File.Delete(nugetExePath);
+                Debug.WriteLine($"Cleaned up temp nuget.exe: {nugetExePath}");
             }
+
+            // 如果目录为空，删除目录
+            if (Directory.EnumerateFileSystemEntries(tempPath).Any()) return;
+            Directory.Delete(tempPath);
+            Debug.WriteLine($"Cleaned up temp directory: {tempPath}");
         }
         catch (Exception ex)
         {
@@ -121,7 +116,7 @@ public partial class MainForm : Form
     }
 
     /// <summary>
-    /// 查询包所有版本及Listed状态（根据用户选择的查询源，包含状态校准）
+    /// 查询包所有版本及Listed状态（根据用户选择的查询源）
     /// </summary>
     private async Task<List<(string Version, bool Listed)>> QueryAllVersionsWithStatusAsync(string packageName)
     {
@@ -513,7 +508,7 @@ public partial class MainForm : Form
     {
         txtReason.Enabled = enabled;
         lblReason.Enabled = enabled;
-    } // 全选复选框事件
+    }
 
     private void chkSelectAll_CheckedChanged(object sender, EventArgs e)
     {
@@ -523,26 +518,9 @@ public partial class MainForm : Form
         var check = chkSelectAll.Checked;
         foreach (DataGridViewRow row in dgvVersions.Rows) row.Cells["colSelect"].Value = check;
         UpdateButtonTexts();
-    } // 全选Listed按钮事件
-
-    private void btnSelectListed_Click(object sender, EventArgs e)
-    {
-        // 检查列是否存在
-        if (dgvVersions.Columns["colSelect"] == null || dgvVersions.Columns["colStatus"] == null)
-            return;
-        foreach (DataGridViewRow row in dgvVersions.Rows) row.Cells["colSelect"].Value = row.Cells["colStatus"].Value?.ToString() == "Listed";
-        UpdateButtonTexts();
     }
-
-    // 全选UnListed按钮事件
-    private void btnSelectUnlisted_Click(object sender, EventArgs e)
-    {
-        // 检查列是否存在
-        if (dgvVersions.Columns["colSelect"] == null || dgvVersions.Columns["colStatus"] == null)
-            return;
-        foreach (DataGridViewRow row in dgvVersions.Rows) row.Cells["colSelect"].Value = row.Cells["colStatus"].Value?.ToString() == "Unlisted";
-        UpdateButtonTexts();
-    } // DataGridView选中行变化时，自动显示/隐藏批量操作按钮
+    
+    // DataGridView选中行变化时，自动显示/隐藏批量操作按钮
 
     private void dgvVersions_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
     {
@@ -639,6 +617,18 @@ public partial class MainForm : Form
                                    ⚠️ Note: Some sources' status information may take time to sync from official servers!
                                    """;
         MessageBox.Show(helpMessage, "Query Source Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
+    }
+
+    private void linkGithub_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/joesdu/NugetManager") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"无法打开链接: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     /// <summary>

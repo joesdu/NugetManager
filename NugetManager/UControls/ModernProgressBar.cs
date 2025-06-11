@@ -47,7 +47,7 @@ public class ModernProgressBar : Control
                  ControlStyles.UserPaint |
                  ControlStyles.DoubleBuffer |
                  ControlStyles.ResizeRedraw, true);
-        Size = new Size(300, 30);
+        Size = new(300, 30);
     }    /// <summary>
          /// Gets or sets the current value of the progress bar
          /// </summary>
@@ -242,7 +242,7 @@ public class ModernProgressBar : Control
     {
         if (_marqueeTimer != null) return;
 
-        _marqueeTimer = new System.Windows.Forms.Timer { Interval = 30 };
+        _marqueeTimer = new() { Interval = 30 };
         _marqueeTimer.Tick += (_, _) =>
         {
             _marqueePosition += _marqueeSpeed;
@@ -272,7 +272,7 @@ public class ModernProgressBar : Control
             _animationTimer.Dispose();
         }
 
-        _animationTimer = new System.Windows.Forms.Timer { Interval = 16 }; // ~60 FPS
+        _animationTimer = new() { Interval = 16 }; // ~60 FPS
         _animationTimer.Tick += AnimationTimer_Tick;
         _animationTimer.Start();
     }
@@ -547,7 +547,7 @@ public class ModernProgressBar : Control
         if (marqueeRect is { Width: > 0, Height: > 0 })
         {
             using var marqueeBrush = new LinearGradientBrush(
-                new Rectangle(marqueeRect.X, marqueeRect.Y, marqueeRect.Width, marqueeRect.Height),
+                new(marqueeRect.X, marqueeRect.Y, marqueeRect.Width, marqueeRect.Height),
                 Color.FromArgb(0, _progressColor),
                 _progressColor,
                 LinearGradientMode.Horizontal);
@@ -649,7 +649,7 @@ public class ModernProgressBar : Control
         _hoverTimer?.Stop();
         _hoverTimer?.Dispose();
 
-        _hoverTimer = new System.Windows.Forms.Timer { Interval = 16 }; // 60 FPS
+        _hoverTimer = new() { Interval = 16 }; // 60 FPS
         _hoverTimer.Tick += (_, _) =>
         {
             if (fadeIn)

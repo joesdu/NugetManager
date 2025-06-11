@@ -7,10 +7,9 @@ namespace NugetManager.Services;
 /// 初始化PackageVersionManager实例
 /// </remarks>
 /// <param name="logAction">日志记录回调方法</param>
-public class PackageVersionManager(Action<string>? logAction = null)
+public sealed class PackageVersionManager(Action<string>? logAction = null)
 {
     private readonly NugetApiService _apiService = new(logAction);
-    private readonly NugetCliService _cliService = new(logAction);
     private readonly WebScrapingService _webScrapingService = new(logAction);
 
     /// <summary>
@@ -59,13 +58,10 @@ public class PackageVersionManager(Action<string>? logAction = null)
             case 1: // Enhanced V3 Registration API
                 await _apiService.UseV3RegistrationStrategy(http, packageName, result);
                 break;
-            case 2: // NuGet CLI Tool
-                await _cliService.UseNuGetCliStrategy(packageName, result);
-                break;
-            case 3: // Web Scraping (nuget.org)
+            case 2: // Web Scraping (nuget.org)
                 await _webScrapingService.UseWebScrapingStrategy(http, packageName, result);
                 break;
-            case 4: // Comprehensive API Search (All Sources)
+            case 3: // Comprehensive API Search (All Sources)
                 await _apiService.UseComprehensiveApiSearch(http, packageName, result);
                 break;
             default:

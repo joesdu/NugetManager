@@ -1,21 +1,20 @@
 using System.Diagnostics;
 using System.Text;
-using System.Text.Json;
 
 namespace NugetManager.Services;
 
 /// <summary>
 /// 处理包操作（删除、弃用）的服务
 /// </summary>
-public class PackageOperationService(Action<string>? logAction = null)
+public sealed class PackageOperationService(Action<string>? logAction = null)
 {    /// <summary>
      /// 执行包删除操作
      /// </summary>
-    public async Task<bool> DeletePackageVersionsAsync(string packageName, string apiKey, List<string> versions, CancellationToken cancellationToken = default, Action<int, int>? progressCallback = null)
+    public async Task<bool> DeletePackageVersionsAsync(string packageName, string apiKey, List<string?> versions, CancellationToken cancellationToken = default, Action<int, int>? progressCallback = null)
     {
         try
         {
-            var nugetExe = NugetCliService.FindNugetExe();
+            var nugetExe = NugetCliHelper.FindNugetExe();
             if (string.IsNullOrEmpty(nugetExe))
             {
                 logAction?.Invoke("× NuGet CLI not found");
@@ -133,7 +132,7 @@ public class PackageOperationService(Action<string>? logAction = null)
     {
         try
         {
-            var nugetExe = NugetCliService.FindNugetExe();
+            var nugetExe = NugetCliHelper.FindNugetExe();
             if (string.IsNullOrEmpty(nugetExe))
             {
                 logAction?.Invoke($"   × NuGet CLI not found, cannot perform unlist operation");
@@ -166,7 +165,7 @@ public class PackageOperationService(Action<string>? logAction = null)
     /// <summary>
     /// 执行单个版本的删除命令
     /// </summary>
-    private async Task<bool> ExecuteNugetDeleteCommand(string nugetExe, string packageName, string version, string apiKey, CancellationToken cancellationToken)
+    private async Task<bool> ExecuteNugetDeleteCommand(string nugetExe, string packageName, string? version, string apiKey, CancellationToken cancellationToken)
     {
         return await Task.Run(() =>
         {
