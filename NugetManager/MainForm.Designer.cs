@@ -382,7 +382,7 @@ partial class MainForm
         linkGithub.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
         linkGithub.AutoSize = true;
         linkGithub.LinkColor = Color.RoyalBlue;
-        linkGithub.Location = new Point(507, 814);
+        linkGithub.Location = new Point(506, 813);
         linkGithub.Name = "linkGithub";
         linkGithub.Size = new Size(45, 15);
         linkGithub.TabIndex = 99;

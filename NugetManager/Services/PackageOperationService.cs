@@ -135,24 +135,15 @@ public sealed class PackageOperationService(Action<string>? logAction = null)
             var nugetExe = NugetCliHelper.FindNugetExe();
             if (string.IsNullOrEmpty(nugetExe))
             {
-                logAction?.Invoke($"   × NuGet CLI not found, cannot perform unlist operation");
+                logAction?.Invoke("   × NuGet CLI not found, cannot perform unlist operation");
                 return false;
             }
 
-            logAction?.Invoke($"   Executing unlist command (deprecation alternative)");
+            logAction?.Invoke("   Executing unlist command (deprecation alternative)");
             logAction?.Invoke($"   Reason: {deprecationInfo}");
 
             var success = await ExecuteNugetDeleteCommand(nugetExe, packageId, version, apiKey, CancellationToken.None);
-
-            if (success)
-            {
-                logAction?.Invoke($"   ✓ Successfully unlisted {version} (achieves similar effect to deprecation)");
-            }
-            else
-            {
-                logAction?.Invoke($"   × Failed to unlist {version}");
-            }
-
+            logAction?.Invoke(success ? $"   ✓ Successfully unlisted {version} (achieves similar effect to deprecation)" : $"   × Failed to unlist {version}");
             return success;
         }
         catch (Exception ex)
@@ -184,7 +175,7 @@ public sealed class PackageOperationService(Action<string>? logAction = null)
                 using var process = Process.Start(psi);
                 if (process == null)
                 {
-                    logAction?.Invoke($"× Failed to start nuget.exe process");
+                    logAction?.Invoke("× Failed to start nuget.exe process");
                     return false;
                 }
 
@@ -231,12 +222,9 @@ public sealed class PackageOperationService(Action<string>? logAction = null)
                 {
                     return true;
                 }
-                else
-                {
-                    var errorMessage = !string.IsNullOrEmpty(errorText) ? errorText : outputText;
-                    logAction?.Invoke($"   Command failed: {errorMessage.Trim()}");
-                    return false;
-                }
+                var errorMessage = !string.IsNullOrEmpty(errorText) ? errorText : outputText;
+                logAction?.Invoke($"   Command failed: {errorMessage.Trim()}");
+                return false;
             }
             catch (Exception ex)
             {

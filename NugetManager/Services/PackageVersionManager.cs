@@ -17,7 +17,7 @@ public sealed class PackageVersionManager(Action<string>? logAction = null)
     /// </summary>
     public async Task<List<(string Version, bool Listed)>> QueryAllVersionsWithStatusAsync(string packageName, int querySource = 0)
     {
-        var result = new List<(string Version, bool Listed)>();
+        List<(string Version, bool Listed)> result;
         try
         {
             // 根据查询源执行不同的查询策略

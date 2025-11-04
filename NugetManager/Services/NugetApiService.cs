@@ -9,18 +9,18 @@ public sealed class NugetApiService(Action<string>? logAction = null)
 {
     private const string DefaultSource = "https://api.nuget.org/v3/index.json";
     private const int DefaultTimeoutSeconds = 30;
-    private const int DefaultRetryCount = 3;
 
     /// <summary>
     /// 获取NuGet服务索引并解析注册服务URL
     /// </summary>
-    public async Task<string?> GetRegistrationServiceUrlAsync(string source = DefaultSource)
+    private async Task<string?> GetRegistrationServiceUrlAsync(string source = DefaultSource)
     {
         try
         {
             logAction?.Invoke($"📋 Resolving registration service URL for {source}...");
 
-            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(DefaultTimeoutSeconds) };
+            using var http = new HttpClient();
+            http.Timeout = TimeSpan.FromSeconds(DefaultTimeoutSeconds);
             var response = await http.GetStringAsync(source);
             var json = JsonDocument.Parse(response);
 
@@ -97,7 +97,8 @@ public sealed class NugetApiService(Action<string>? logAction = null)
     /// </summary>
     private async Task ProcessRegistrationWithPagination(string registrationService, string packageName, List<(string Version, bool Listed)> result)
     {
-        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(DefaultTimeoutSeconds) };
+        using var http = new HttpClient();
+        http.Timeout = TimeSpan.FromSeconds(DefaultTimeoutSeconds);
         var baseUrl = $"{registrationService}/{packageName.ToLower()}/index.json";
         var visitedUrls = new HashSet<string>();
         var currentUrl = baseUrl;
@@ -176,10 +177,7 @@ public sealed class NugetApiService(Action<string>? logAction = null)
     /// </summary>
     private async Task ProcessRegistrationPage(HttpClient http, string pageUrl, List<(string Version, bool Listed)> result, HashSet<string> visitedUrls)
     {
-        if (visitedUrls.Contains(pageUrl)) return;
-
-        visitedUrls.Add(pageUrl);
-
+        if (!visitedUrls.Add(pageUrl)) return;
         try
         {
             logAction?.Invoke($"   Processing page: {pageUrl}");
@@ -239,7 +237,8 @@ public sealed class NugetApiService(Action<string>? logAction = null)
         try
         {
             logAction?.Invoke("🔄 Using V3 registration API fallback method...");
-            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(DefaultTimeoutSeconds) };
+            using var http = new HttpClient();
+            http.Timeout = TimeSpan.FromSeconds(DefaultTimeoutSeconds);
             var registrationUrl = $"https://api.nuget.org/v3/registration5-semver1/{packageName.ToLowerInvariant()}/index.json";
 
             logAction?.Invoke($"   GET {registrationUrl}");
